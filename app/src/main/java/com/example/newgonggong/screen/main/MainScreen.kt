@@ -9,8 +9,9 @@ import com.example.newgonggong.screen.main.bottom.BottomNavigation
 fun MainScreen() {
     val navController = rememberNavController()
     Scaffold(
-        bottomBar = { BotNavBar(navController) },
+        bottomBar = { BottomNavigationBar(navController) },
     ){
         BottomNavigation(navController = navController)
     }
 }
+

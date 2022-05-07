@@ -1,74 +1,74 @@
 package com.example.newgonggong
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.material.Scaffold
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.newgonggong.screen.nearby.Identifier
+import com.example.newgonggong.screen.nearby.MinFabItem
+import com.example.newgonggong.screen.nearby.MultiFloatingButton
+import com.example.newgonggong.screen.nearby.MultiFloatingState
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 
 @Composable
 fun NearByScreen() {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(
-                    RoundedCornerShape(
-                        bottomEnd = 10.dp,
-                        bottomStart = 10.dp
-                    )
-                )
-        ) {
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                uiSettings = MapUiSettings(zoomControlsEnabled = true),
+    var multiFloatingState by remember {
+        mutableStateOf(MultiFloatingState.Collapsed)
+    }
+    val items = listOf(
+        MinFabItem(
+            icon = R.drawable.ic_card,
+            label = "급식카드",
+            identifier = Identifier.Card.name
+        ),
+        MinFabItem(
+            icon = R.drawable.ic_food,
+            label = "무료급식소",
+            identifier = Identifier.Food.name
+        ),
+        MinFabItem(
+            icon = R.drawable.ic_welfare,
+            label = "복지관",
+            identifier = Identifier.Welfare.name
+        ),
+        MinFabItem(
+            icon = R.drawable.ic_location,
+            label = "현재위치",
+            identifier = Identifier.Location.name
+        )
+    )
+    val context = LocalContext.current
 
-                //현재위치로 변경해야함
-                cameraPositionState = CameraPositionState(
-                    CameraPosition(
-                        LatLng(22.5726, 88.3639), 12f, 0f, 0f
-                    )
+    Scaffold(
+        modifier = Modifier.padding(bottom = 50.dp),
+        floatingActionButton = {
+            MultiFloatingButton(
+                multiFloatingState = multiFloatingState,
+                onMultiFabStateChange = {
+                    multiFloatingState = it
+                },
+                items = items,
+                context = context
+            )
+        }
+    ) {
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            uiSettings = MapUiSettings(zoomControlsEnabled = false),
+
+            //현재위치로 변경해야함
+            cameraPositionState = CameraPositionState(
+                CameraPosition(
+                    LatLng(22.5726, 88.3639), 12f, 0f, 0f
                 )
             )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color(0x6F202020)
-                            )
-                        )
-                    ),
-                contentAlignment = Alignment.BottomCenter
-            ){
-                MapBotNav()
-            }
-        }
+        )
     }
 }
+

@@ -2,8 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.newgonggong">
 
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -14,13 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.NewGongGong">
 
-        <uses-library
-            android:name="org.apache.http.legacy"
-            android:required="false" />
-
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyDZNA2Vlx6XHxLOgKempJRBn57HiScT2yM" />
+            android:value="${MAPS_API_KEY}" />
 
         <activity
             android:name=".MainActivity"
