@@ -1,4 +1,4 @@
-package com.example.newgonggong.screen.main.bottom
+package com.example.newgonggong.screen.main
 
 import com.example.newgonggong.R
 

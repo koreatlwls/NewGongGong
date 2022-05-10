@@ -80,9 +80,6 @@ fun MultiFloatingButton(
                     item = it,
                     onMinFabItemClick = { minFabItem ->
                         when (minFabItem.identifier) {
-                            Identifier.Location.name -> {
-                                Toast.makeText(context, "Location", Toast.LENGTH_SHORT).show()
-                            }
                             Identifier.Card.name -> {
                                 Toast.makeText(context, "Card", Toast.LENGTH_SHORT).show()
                             }
