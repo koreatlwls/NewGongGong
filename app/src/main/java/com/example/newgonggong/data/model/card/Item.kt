@@ -21,11 +21,11 @@ data class Item(
     @SerializedName("insttCode")
     val insttCode: String,
     @SerializedName("latitude")
-    val latitude: String,
+    val latitude: Double,
     @SerializedName("lnmadr")
     val lnmadr: String,
     @SerializedName("longitude")
-    val longitude: String,
+    val longitude: Double,
     @SerializedName("mrhstCode")
     val mrhstCode: String,
     @SerializedName("mrhstNm")

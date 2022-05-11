@@ -12,7 +12,7 @@ android {
         applicationId "com.example.newgonggong"
         minSdk 21
         targetSdk 32
-        versionCode 1
+        versionCode
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -20,7 +20,8 @@ android {
             useSupportLibrary true
         }
 
-        buildConfigField("String", "CARD_API_KEY", MAPS_API_KEY)
+        buildConfigField("String", "CARD_API_KEY", CARD_API_KEY)
+        buildConfigField("String", "BASE_URL", BASE_URL)
     }
 
     buildTypes {
@@ -35,6 +36,7 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
+        freeCompilerArgs = ['-Xjvm-default=enable']
     }
     buildFeatures {
         compose true
@@ -47,6 +49,8 @@ android {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+
+
 }
 
 dependencies {

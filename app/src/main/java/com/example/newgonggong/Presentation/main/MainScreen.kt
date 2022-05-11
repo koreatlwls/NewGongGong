@@ -21,9 +21,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.newgonggong.screen.main.BottomNavigationItem
-import com.example.newgonggong.utils.FusedLocationWrapper
-import com.example.newgonggong.utils.PermissionState
+import com.example.newgonggong.Presentation.main.BottomNavigationItem
+import com.example.newgonggong.data.model.Location
+import com.example.newgonggong.data.util.FusedLocationWrapper
+import com.example.newgonggong.data.util.PermissionState
 
 @SuppressLint("MissingPermission")
 @Composable

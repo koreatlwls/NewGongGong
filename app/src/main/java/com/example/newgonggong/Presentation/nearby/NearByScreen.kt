@@ -1,20 +1,21 @@
 package com.example.newgonggong
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Scaffold
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.newgonggong.screen.nearby.*
+import com.example.newgonggong.Presentation.nearby.*
+import com.example.newgonggong.data.model.Location
+import com.example.newgonggong.data.util.Resource
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
-import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.*
 
 @Composable
 fun NearByScreen(
@@ -54,6 +55,19 @@ fun NearByScreen(
                 zoomControlsEnabled = false
             )
         )
+    }
+
+    val card by viewModel.card.observeAsState()
+    when(card){
+        is Resource.Success -> {
+            Log.d("ABC",card?.data?.response?.body?.items.toString())
+        }
+        is Resource.Loading -> {
+            Log.d("ABC", "Loading ~ ")
+        }
+        is Resource.Error ->{
+            Log.d("ABC", "Error ~ ")
+        }
     }
 
     LaunchedEffect(location) {
@@ -97,7 +111,17 @@ fun NearByScreen(
             cameraPositionState = cameraPositionState,
             properties = mapProperties,
             uiSettings = uiSettings
-        )
+        ){
+
+            card?.data?.response?.body?.items?.toList()?.forEach {
+                val latitude = it.latitude
+                val longitude = it.longitude
+                if(latitude != null && longitude !=null){
+                    val cardLocation = LatLng(latitude, longitude)
+                    Marker(position = cardLocation, title =it.mrhstNm)
+                }
+            }
+        }
     }
 }
 

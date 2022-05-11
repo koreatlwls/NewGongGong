@@ -1,4 +1,4 @@
-package com.example.newgonggong.screen.nearby
+package com.example.newgonggong.Presentation.nearby
 
 import android.content.Context
 import android.widget.Toast

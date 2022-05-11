@@ -1,4 +1,4 @@
-package com.example.newgonggong.utils
+package com.example.newgonggong.data.util
 
 import android.content.pm.PackageManager
 import androidx.activity.ComponentActivity
