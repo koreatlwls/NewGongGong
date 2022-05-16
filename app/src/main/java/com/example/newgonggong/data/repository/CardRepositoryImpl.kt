@@ -2,7 +2,7 @@ package com.example.newgonggong.data.repository
 
 import com.example.newgonggong.data.model.card.CardAPIResponse
 import com.example.newgonggong.data.repository.dataSource.CardRemoteDataSource
-import com.example.newgonggong.data.util.Resource
+import com.example.newgonggong.data.model.Resource
 import com.example.newgonggong.domain.CardRepository
 import retrofit2.Response
 

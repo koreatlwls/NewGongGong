@@ -1,4 +1,4 @@
-package com.example.newgonggong.data.util
+package com.example.newgonggong.data.model
 
 sealed class Resource<T>(
     val data: T? = null,

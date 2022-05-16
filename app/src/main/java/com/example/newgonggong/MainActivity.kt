@@ -2,7 +2,6 @@ package com.example.newgonggong
 
 import android.Manifest
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.ExperimentalComposeApi
@@ -25,7 +24,6 @@ class MainActivity : ComponentActivity() {
                 MainScreen(fineLocation, fusedLocationWrapper, mapsViewModel)
             }
         }
-
-        Log.d("ABC", mapsViewModel.getCard("대구광역시","달서구").toString())
     }
 }
+
