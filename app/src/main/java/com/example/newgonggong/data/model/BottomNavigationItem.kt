@@ -1,4 +1,4 @@
-package com.example.newgonggong.Presentation.main
+package com.example.newgonggong.data.model
 
 import com.example.newgonggong.R
 

@@ -7,6 +7,7 @@ import android.location.Geocoder
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -50,7 +51,10 @@ class MapsViewModel(
     fun setLocation(loc: Location) {
         _location.value = loc
         val addressSplit = getAddress(context, loc.latitude, loc.longitude).split(" ")
-        getCard(addressSplit[1], addressSplit[2])
+
+        if (addressSplit.size > 2) {
+            getCard(addressSplit[1], addressSplit[2])
+        }
     }
 
     fun setCameraPosition(loc: Location) {
@@ -58,10 +62,12 @@ class MapsViewModel(
             _cameraPosition.value = loc
             val addressSplit = getAddress(context, loc.latitude, loc.longitude).split(" ")
 
-            if (addressSplit[1] != lastCtprvnNm && addressSplit[2] != lastSignguNm) {
-                getCard(addressSplit[1], addressSplit[2])
-                lastCtprvnNm = addressSplit[1]
-                lastSignguNm = addressSplit[2]
+            if (addressSplit.size > 2) {
+                if (addressSplit[1] != lastCtprvnNm && addressSplit[2] != lastSignguNm) {
+                    getCard(addressSplit[1], addressSplit[2])
+                    lastCtprvnNm = addressSplit[1]
+                    lastSignguNm = addressSplit[2]
+                }
             }
         }
     }
@@ -81,7 +87,7 @@ class MapsViewModel(
                     _card.postValue(Resource.Error("Internet is not available"))
                 }
             } catch (e: Exception) {
-
+               _card.postValue(Resource.Error(e.toString()))
             }
         }
 
@@ -115,9 +121,13 @@ class MapsViewModel(
 
     }
 
-    private fun getAddress(context : Context, lat : Double, lng : Double) : String{
-        val geocoder = Geocoder(context , Locale.KOREA)
+    private fun getAddress(context: Context, lat: Double, lng: Double): String {
+        val geocoder = Geocoder(context, Locale.KOREA)
         val list = geocoder.getFromLocation(lat, lng, 1)
-        return list[0].getAddressLine(0)
+
+        if (list.size != 0) {
+            return list[0].getAddressLine(0)
+        }
+        return "서울특별시 중구 소공동 세종대로18길 2"
     }
 }
