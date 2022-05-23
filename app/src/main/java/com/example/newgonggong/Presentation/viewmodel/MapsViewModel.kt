@@ -8,6 +8,11 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.Log
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringSetPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -18,11 +23,11 @@ import com.example.newgonggong.data.model.Resource
 import com.example.newgonggong.domain.CardRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
+
+val Context.dataStore : DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 @ExperimentalCoroutinesApi
 class MapsViewModel(
@@ -48,12 +53,21 @@ class MapsViewModel(
     private var lastCtprvnNm: String? = null
     private var lastSignguNm: String? = null
 
+    private val FAVORITES_KEY = stringSetPreferencesKey("favorites")
+    val favorites : Flow<Set<String>> = context.dataStore.data.map{ preferences ->
+        preferences[FAVORITES_KEY] ?: emptySet()
+    }
+
     fun setLocation(loc: Location) {
         _location.value = loc
         val addressSplit = getAddress(context, loc.latitude, loc.longitude).split(" ")
 
         if (addressSplit.size > 2) {
-            getCard(addressSplit[1], addressSplit[2])
+            if (addressSplit[1] != lastCtprvnNm && addressSplit[2] != lastSignguNm) {
+                getCard(addressSplit[1], addressSplit[2])
+                lastCtprvnNm = addressSplit[1]
+                lastSignguNm = addressSplit[2]
+            }
         }
     }
 
@@ -129,5 +143,18 @@ class MapsViewModel(
             return list[0].getAddressLine(0)
         }
         return "서울특별시 중구 소공동 세종대로18길 2"
+    }
+
+    fun toggleFavorite(rdnmadr : String){
+        viewModelScope.launch {
+            context.dataStore.edit { settings ->
+                val currentFavorites = settings[FAVORITES_KEY] ?: emptySet()
+                val newFavorites = currentFavorites.toMutableSet()
+                if(!newFavorites.add(rdnmadr)){
+                    newFavorites.remove(rdnmadr)
+                }
+                settings[FAVORITES_KEY] = newFavorites
+            }
+        }
     }
 }

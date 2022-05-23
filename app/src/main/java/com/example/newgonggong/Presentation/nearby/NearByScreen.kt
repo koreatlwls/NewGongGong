@@ -2,20 +2,34 @@ package com.example.newgonggong
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.util.Log
+import android.widget.Toast
 import androidx.annotation.ColorRes
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import com.example.newgonggong.data.model.Location
 import com.example.newgonggong.data.model.Resource
 import com.example.newgonggong.data.model.card.Item
+import com.example.newgonggong.ui.theme.Purple200
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -28,34 +42,46 @@ import kotlinx.coroutines.launch
 fun NearByScreen(
     viewModel: MapsViewModel
 ) {
-    val scaffoldState = rememberScaffoldState()
+    val context = LocalContext.current
 
     val card by viewModel.card.observeAsState()
 
-    val coroutineScope = rememberCoroutineScope()
+    val favorites by viewModel.favorites.collectAsState(setOf())
 
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    Scaffold(
-        scaffoldState = scaffoldState,
+    Column(
         modifier = Modifier.padding(bottom = 50.dp),
     ) {
-        GoogleMapView(viewModel = viewModel, cards = card?.data?.response?.body?.items )
-        when(card){
-            is Resource.Loading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .wrapContentSize(Alignment.Center)
-                ) {
+        Box(modifier = Modifier.weight(0.4f)) {
+            GoogleMapView(viewModel, card?.data?.response?.body?.items)
+        }
+        Box(
+            modifier = Modifier
+                .weight(0.6f)
+                .fillMaxSize()
+                .wrapContentSize(Alignment.Center)
+        ) {
+            when (card) {
+                is Resource.Success -> {
+                    if (card?.data?.response?.header?.resultMsg == "NODATA_ERROR") {
+                        Text("주변에 위치한 급식카드 가맹점이 없습니다.")
+                    } else {
+                        card?.data?.response?.body?.items?.let { cards ->
+                            CardListView(
+                                viewModel = viewModel,
+                                cards = cards,
+                                favorites = favorites
+                            ) {
+                                val location = Location(it.latitude,it.longitude)
+                                viewModel.setLocation(location)
+                            }
+                        }
+                    }
+                }
+                is Resource.Loading -> {
                     CircularProgressIndicator()
                 }
-            }
-            is Resource.Error -> {
-                coroutineScope.launch {
-                    snackbarHostState.showSnackbar(
-                        message = "급식카드 가맹점을 가져오는데 실패하였습니다."
-                    )
+                is Resource.Error -> {
+                    Toast.makeText(context, "급식카드 가맹점을 가져오는데 실패하였습니다.", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -63,7 +89,7 @@ fun NearByScreen(
 }
 
 @Composable
-private fun GoogleMapView(viewModel: MapsViewModel, cards : List<Item>?){
+private fun GoogleMapView(viewModel: MapsViewModel, cards: List<Item>?) {
     val context = LocalContext.current
     val location by viewModel.location.collectAsState()
     val mapProperties by remember { mutableStateOf(MapProperties(isMyLocationEnabled = true)) }
@@ -106,27 +132,110 @@ private fun GoogleMapView(viewModel: MapsViewModel, cards : List<Item>?){
         cameraPositionState = cameraPositionState,
         properties = mapProperties,
         uiSettings = uiSettings
-    ){
+    ) {
         cards?.forEach {
             val cardLocation = LatLng(it.latitude, it.longitude)
-            val icon = bitmapDescriptorFromVector(context, R.drawable.ic_store,R.color.orange)
+            val icon = bitmapDescriptorFromVector(context, R.drawable.ic_store, R.color.orange)
             Marker(position = cardLocation, title = it.mrhstNm, icon = icon)
         }
     }
 }
 
 // TODO move this in to common code
-fun bitmapDescriptorFromVector(context: Context, vectorResId: Int, @ColorRes tintColor: Int? = null): BitmapDescriptor? {
+fun bitmapDescriptorFromVector(
+    context: Context,
+    vectorResId: Int,
+    @ColorRes tintColor: Int? = null
+): BitmapDescriptor? {
 
     val drawable = ContextCompat.getDrawable(context, vectorResId) ?: return null
     drawable.setBounds(0, 0, drawable.intrinsicWidth, drawable.intrinsicHeight)
-    val bm = Bitmap.createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
+    val bm = Bitmap.createBitmap(
+        drawable.intrinsicWidth,
+        drawable.intrinsicHeight,
+        Bitmap.Config.ARGB_8888
+    )
 
     tintColor?.let {
         DrawableCompat.setTint(drawable, ContextCompat.getColor(context, it))
     }
- 
+
     val canvas = android.graphics.Canvas(bm)
     drawable.draw(canvas)
     return BitmapDescriptorFactory.fromBitmap(bm)
+}
+
+@Composable
+fun CardListView(
+    viewModel: MapsViewModel, cards: List<Item>,
+    favorites: Set<String>, itemClick: (card: Item) -> Unit
+) {
+    LazyColumn {
+        items(cards) { card ->
+            CardView(
+                card = card,
+                itemClick = itemClick,
+                isFavorite = favorites.contains(card.rdnmadr),
+                onToggleFavorite = {
+                    viewModel.toggleFavorite(card.rdnmadr)
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun CardView(
+    card: Item,
+    itemClick: (card: Item) -> Unit,
+    isFavorite: Boolean,
+    onToggleFavorite: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .clickable(onClick = { itemClick(card) })
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            painterResource(R.drawable.ic_store),
+            modifier = Modifier.size(48.dp),
+            contentDescription = "Card"
+        )
+
+        Spacer(modifier = Modifier.size(16.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = card.mrhstNm, style = TextStyle(fontSize = 24.sp))
+            Text(text = card.rdnmadr, style = TextStyle(color = Color.DarkGray, fontSize = 16.sp))
+        }
+        FavoritesButton(
+            isFavorite = isFavorite,
+            onClick = onToggleFavorite
+        )
+    }
+}
+
+@Composable
+fun FavoritesButton(
+    isFavorite: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    IconToggleButton(
+        checked = isFavorite,
+        onCheckedChange = { onClick() },
+        modifier = modifier
+    )
+    {
+        if (isFavorite) {
+            Icon(
+                imageVector = Icons.Filled.Favorite,
+                tint = Purple200,
+                contentDescription = "Favorited"
+            )
+        } else {
+            Icon(imageVector = Icons.Filled.FavoriteBorder, contentDescription = "Unfavorited")
+        }
+    }
 }
