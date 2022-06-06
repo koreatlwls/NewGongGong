@@ -17,6 +17,10 @@ class CardRepositoryImpl(
     private fun responseToResource(response: Response<CardAPIResponse>): Resource<CardAPIResponse> {
         if (response.isSuccessful) {
             response.body()?.let { result ->
+                val filterResult = result.response.body.items.filter{
+                    it.latitude.isNotBlank() && it.longitude.isNotBlank()
+                }
+                result.response.body.items = filterResult
                 return Resource.Success(result)
             }
         }

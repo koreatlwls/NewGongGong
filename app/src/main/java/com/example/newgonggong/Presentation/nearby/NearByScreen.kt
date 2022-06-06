@@ -2,8 +2,6 @@ package com.example.newgonggong
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.util.Log
-import android.widget.Toast
 import androidx.annotation.ColorRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -42,8 +40,6 @@ import kotlinx.coroutines.launch
 fun NearByScreen(
     viewModel: MapsViewModel
 ) {
-    val context = LocalContext.current
-
     val card by viewModel.card.observeAsState()
 
     val favorites by viewModel.favorites.collectAsState(setOf())
@@ -51,29 +47,25 @@ fun NearByScreen(
     Column(
         modifier = Modifier.padding(bottom = 50.dp),
     ) {
-        Box(modifier = Modifier.weight(0.4f)) {
+        Box(modifier = Modifier.weight(0.5f)) {
             GoogleMapView(viewModel, card?.data?.response?.body?.items)
         }
         Box(
             modifier = Modifier
-                .weight(0.6f)
+                .weight(0.5f)
                 .fillMaxSize()
                 .wrapContentSize(Alignment.Center)
         ) {
             when (card) {
                 is Resource.Success -> {
-                    if (card?.data?.response?.header?.resultMsg == "NODATA_ERROR") {
-                        Text("주변에 위치한 급식카드 가맹점이 없습니다.")
-                    } else {
-                        card?.data?.response?.body?.items?.let { cards ->
-                            CardListView(
-                                viewModel = viewModel,
-                                cards = cards,
-                                favorites = favorites
-                            ) {
-                                val location = Location(it.latitude,it.longitude)
-                                viewModel.setLocation(location)
-                            }
+                    card?.data?.response?.body?.items?.let { cards ->
+                        CardListView(
+                            viewModel = viewModel,
+                            cards = cards,
+                            favorites = favorites
+                        ) {
+                            val location = Location(it.latitude.toDouble(), it.longitude.toDouble())
+                            viewModel.setLocation(location)
                         }
                     }
                 }
@@ -81,7 +73,7 @@ fun NearByScreen(
                     CircularProgressIndicator()
                 }
                 is Resource.Error -> {
-                    Toast.makeText(context, "급식카드 가맹점을 가져오는데 실패하였습니다.", Toast.LENGTH_SHORT).show()
+                    Text("주변에 위치한 급식카드 가맹점이 없습니다.")
                 }
             }
         }
@@ -134,7 +126,7 @@ private fun GoogleMapView(viewModel: MapsViewModel, cards: List<Item>?) {
         uiSettings = uiSettings
     ) {
         cards?.forEach {
-            val cardLocation = LatLng(it.latitude, it.longitude)
+            val cardLocation = LatLng(it.latitude.toDouble(), it.longitude.toDouble())
             val icon = bitmapDescriptorFromVector(context, R.drawable.ic_store, R.color.orange)
             Marker(position = cardLocation, title = it.mrhstNm, icon = icon)
         }

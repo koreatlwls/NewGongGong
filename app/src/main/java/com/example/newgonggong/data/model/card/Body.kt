@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 
 data class Body(
     @SerializedName("items")
-    val items: List<Item>,
+    var items: List<Item>,
     @SerializedName("numOfRows")
     val numOfRows: String,
     @SerializedName("pageNo")

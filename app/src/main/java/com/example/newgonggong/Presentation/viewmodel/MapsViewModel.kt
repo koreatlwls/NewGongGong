@@ -38,8 +38,8 @@ class MapsViewModel(
     @SuppressLint("StaticFieldLeak")
     private val context = getApplication<Application>().applicationContext
 
-    val seoulStation = Location(37.5283169, 126.9294254)
-    private val _location = MutableStateFlow(seoulStation)
+    val defaultLocation = Location(0.0, 0.0)
+    private val _location = MutableStateFlow(defaultLocation)
     val location: StateFlow<Location> = _location.asStateFlow()
 
     private val zoomLevel = MutableStateFlow(15.0f)
@@ -102,6 +102,7 @@ class MapsViewModel(
                 }
             } catch (e: Exception) {
                _card.postValue(Resource.Error(e.toString()))
+                Log.d("ABC",e.toString())
             }
         }
 
