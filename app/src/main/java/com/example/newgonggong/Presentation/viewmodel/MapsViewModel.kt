@@ -53,9 +53,14 @@ class MapsViewModel(
     private var lastCtprvnNm: String? = null
     private var lastSignguNm: String? = null
 
-    private val FAVORITES_KEY = stringSetPreferencesKey("favorites")
-    val favorites : Flow<Set<String>> = context.dataStore.data.map{ preferences ->
-        preferences[FAVORITES_KEY] ?: emptySet()
+
+    private val FAVORITES_RDNMADR_KEY = stringSetPreferencesKey("favorties_rdnmadr_key")
+    private val FAVORITES_ITEM_KEY = stringSetPreferencesKey("favorites_item_key")
+    val favorites_rdnmadr : Flow<Set<String>> = context.dataStore.data.map { preferences ->
+        preferences[FAVORITES_RDNMADR_KEY] ?: emptySet()
+    }
+    val favorites_item : Flow<Set<String>> = context.dataStore.data.map { preferences ->
+        preferences[FAVORITES_ITEM_KEY] ?: emptySet()
     }
 
     fun setLocation(loc: Location) {
@@ -146,15 +151,23 @@ class MapsViewModel(
         return "서울특별시 중구 소공동 세종대로18길 2"
     }
 
-    fun toggleFavorite(rdnmadr : String){
+    fun toggleFavorite(mrhstnm : String, rdnmadr : String){
         viewModelScope.launch {
             context.dataStore.edit { settings ->
-                val currentFavorites = settings[FAVORITES_KEY] ?: emptySet()
-                val newFavorites = currentFavorites.toMutableSet()
-                if(!newFavorites.add(rdnmadr)){
-                    newFavorites.remove(rdnmadr)
+                val currentFavoritesRdnmadr = settings[FAVORITES_RDNMADR_KEY] ?: emptySet()
+                val newFavoritesRdnmadr = currentFavoritesRdnmadr.toMutableSet()
+                if(!newFavoritesRdnmadr.add(rdnmadr)){
+                    newFavoritesRdnmadr.remove(rdnmadr)
                 }
-                settings[FAVORITES_KEY] = newFavorites
+                settings[FAVORITES_RDNMADR_KEY] = newFavoritesRdnmadr
+
+                val currentFavoritesItem = settings[FAVORITES_ITEM_KEY] ?: emptySet()
+                val newFavoritesItem = currentFavoritesItem.toMutableSet()
+                val combineMrhstnmRdnmadr = "$mrhstnm+$rdnmadr"
+                if(!newFavoritesItem.add(combineMrhstnmRdnmadr)){
+                    newFavoritesItem.remove(combineMrhstnmRdnmadr)
+                }
+                settings[FAVORITES_ITEM_KEY] = newFavoritesItem
             }
         }
     }

@@ -50,7 +50,7 @@ fun MainScreen(
                     NearByScreen(viewModel)
                 }
                 composable(BottomNavigationItem.Favorite.route) {
-                    FavoriteScreen()
+                    FavoriteScreen(viewModel)
                 }
             }
         }else{

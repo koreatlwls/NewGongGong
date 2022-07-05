@@ -1,5 +1,6 @@
 package com.example.newgonggong
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.annotation.ColorRes
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -27,53 +29,62 @@ import androidx.core.graphics.drawable.DrawableCompat
 import com.example.newgonggong.data.model.Location
 import com.example.newgonggong.data.model.Resource
 import com.example.newgonggong.data.model.card.Item
-import com.example.newgonggong.ui.theme.Purple200
+import com.example.newgonggong.ui.theme.White
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
-import kotlinx.coroutines.launch
 
+@SuppressLint("MissingPermission")
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun NearByScreen(
     viewModel: MapsViewModel
 ) {
     val card by viewModel.card.observeAsState()
 
-    val favorites by viewModel.favorites.collectAsState(setOf())
+    val favorites by viewModel.favorites_rdnmadr.collectAsState(setOf())
 
-    Column(
+    Scaffold(
         modifier = Modifier.padding(bottom = 50.dp),
-    ) {
-        Box(modifier = Modifier.weight(0.5f)) {
-            GoogleMapView(viewModel, card?.data?.response?.body?.items)
+        topBar = {
+            TopAppBar(backgroundColor = colorResource(id = R.color.orange),
+                title = { Text(text = "GongGong", color = Color.White) }
+            )
         }
-        Box(
-            modifier = Modifier
-                .weight(0.5f)
-                .fillMaxSize()
-                .wrapContentSize(Alignment.Center)
-        ) {
-            when (card) {
-                is Resource.Success -> {
-                    card?.data?.response?.body?.items?.let { cards ->
-                        CardListView(
-                            viewModel = viewModel,
-                            cards = cards,
-                            favorites = favorites
-                        ) {
-                            val location = Location(it.latitude.toDouble(), it.longitude.toDouble())
-                            viewModel.setLocation(location)
+    ) {
+        Column {
+            Box(modifier = Modifier.weight(0.5f)) {
+                GoogleMapView(viewModel, card?.data?.response?.body?.items)
+            }
+            Box(
+                modifier = Modifier
+                    .weight(0.5f)
+                    .fillMaxSize()
+                    .wrapContentSize(Alignment.Center)
+            ) {
+                when (card) {
+                    is Resource.Success -> {
+                        card?.data?.response?.body?.items?.let { cards ->
+                            CardListView(
+                                viewModel = viewModel,
+                                cards = cards,
+                                favorites = favorites
+                            ) {
+                                val location =
+                                    Location(it.latitude.toDouble(), it.longitude.toDouble())
+                                viewModel.setLocation(location)
+                            }
                         }
                     }
-                }
-                is Resource.Loading -> {
-                    CircularProgressIndicator()
-                }
-                is Resource.Error -> {
-                    Text("주변에 위치한 급식카드 가맹점이 없습니다.")
+                    is Resource.Loading -> {
+                        CircularProgressIndicator()
+                    }
+                    is Resource.Error -> {
+                        Text("주변에 위치한 급식카드 가맹점이 없습니다.")
+                    }
                 }
             }
         }
@@ -162,14 +173,14 @@ fun CardListView(
     viewModel: MapsViewModel, cards: List<Item>,
     favorites: Set<String>, itemClick: (card: Item) -> Unit
 ) {
-    LazyColumn {
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(cards) { card ->
             CardView(
                 card = card,
                 itemClick = itemClick,
                 isFavorite = favorites.contains(card.rdnmadr),
                 onToggleFavorite = {
-                    viewModel.toggleFavorite(card.rdnmadr)
+                    viewModel.toggleFavorite(card.mrhstNm, card.rdnmadr)
                 }
             )
         }
@@ -186,6 +197,7 @@ fun CardView(
     Row(
         modifier = Modifier
             .clickable(onClick = { itemClick(card) })
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -198,8 +210,12 @@ fun CardView(
         Spacer(modifier = Modifier.size(16.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = card.mrhstNm, style = TextStyle(fontSize = 24.sp))
-            Text(text = card.rdnmadr, style = TextStyle(color = Color.DarkGray, fontSize = 16.sp))
+            Text(text = card.mrhstNm, style = TextStyle(fontSize = 24.sp), maxLines = 1)
+            Text(
+                text = card.rdnmadr,
+                style = TextStyle(color = Color.DarkGray, fontSize = 16.sp),
+                maxLines = 1
+            )
         }
         FavoritesButton(
             isFavorite = isFavorite,
@@ -223,7 +239,7 @@ fun FavoritesButton(
         if (isFavorite) {
             Icon(
                 imageVector = Icons.Filled.Favorite,
-                tint = Purple200,
+                tint = White,
                 contentDescription = "Favorited"
             )
         } else {
