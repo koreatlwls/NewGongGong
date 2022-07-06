@@ -7,7 +7,6 @@ import android.location.Geocoder
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
-import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -20,6 +19,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.newgonggong.data.model.Location
 import com.example.newgonggong.data.model.card.CardAPIResponse
 import com.example.newgonggong.data.model.Resource
+import com.example.newgonggong.data.model.card.Item
 import com.example.newgonggong.domain.CardRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,7 +27,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
 
-val Context.dataStore : DataStore<Preferences> by preferencesDataStore(name = "settings")
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 @ExperimentalCoroutinesApi
 class MapsViewModel(
@@ -41,6 +41,9 @@ class MapsViewModel(
     val defaultLocation = Location(0.0, 0.0)
     private val _location = MutableStateFlow(defaultLocation)
     val location: StateFlow<Location> = _location.asStateFlow()
+
+    private val _currentCard = MutableStateFlow<Item?>(null)
+    val currentCard: StateFlow<Item?> = _currentCard.asStateFlow()
 
     private val zoomLevel = MutableStateFlow(15.0f)
 
@@ -56,10 +59,10 @@ class MapsViewModel(
 
     private val FAVORITES_RDNMADR_KEY = stringSetPreferencesKey("favorties_rdnmadr_key")
     private val FAVORITES_ITEM_KEY = stringSetPreferencesKey("favorites_item_key")
-    val favorites_rdnmadr : Flow<Set<String>> = context.dataStore.data.map { preferences ->
+    val favorites_rdnmadr: Flow<Set<String>> = context.dataStore.data.map { preferences ->
         preferences[FAVORITES_RDNMADR_KEY] ?: emptySet()
     }
-    val favorites_item : Flow<Set<String>> = context.dataStore.data.map { preferences ->
+    val favorites_item: Flow<Set<String>> = context.dataStore.data.map { preferences ->
         preferences[FAVORITES_ITEM_KEY] ?: emptySet()
     }
 
@@ -106,8 +109,7 @@ class MapsViewModel(
                     _card.postValue(Resource.Error("Internet is not available"))
                 }
             } catch (e: Exception) {
-               _card.postValue(Resource.Error(e.toString()))
-                Log.d("ABC",e.toString())
+                _card.postValue(Resource.Error(e.toString()))
             }
         }
 
@@ -151,12 +153,12 @@ class MapsViewModel(
         return "서울특별시 중구 소공동 세종대로18길 2"
     }
 
-    fun toggleFavorite(mrhstnm : String, rdnmadr : String){
+    fun toggleFavorite(mrhstnm: String, rdnmadr: String) {
         viewModelScope.launch {
             context.dataStore.edit { settings ->
                 val currentFavoritesRdnmadr = settings[FAVORITES_RDNMADR_KEY] ?: emptySet()
                 val newFavoritesRdnmadr = currentFavoritesRdnmadr.toMutableSet()
-                if(!newFavoritesRdnmadr.add(rdnmadr)){
+                if (!newFavoritesRdnmadr.add(rdnmadr)) {
                     newFavoritesRdnmadr.remove(rdnmadr)
                 }
                 settings[FAVORITES_RDNMADR_KEY] = newFavoritesRdnmadr
@@ -164,11 +166,15 @@ class MapsViewModel(
                 val currentFavoritesItem = settings[FAVORITES_ITEM_KEY] ?: emptySet()
                 val newFavoritesItem = currentFavoritesItem.toMutableSet()
                 val combineMrhstnmRdnmadr = "$mrhstnm+$rdnmadr"
-                if(!newFavoritesItem.add(combineMrhstnmRdnmadr)){
+                if (!newFavoritesItem.add(combineMrhstnmRdnmadr)) {
                     newFavoritesItem.remove(combineMrhstnmRdnmadr)
                 }
                 settings[FAVORITES_ITEM_KEY] = newFavoritesItem
             }
         }
+    }
+
+    fun setCurrentCard(card: Item) {
+        _currentCard.value = card
     }
 }

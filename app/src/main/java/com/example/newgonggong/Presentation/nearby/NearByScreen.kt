@@ -3,6 +3,7 @@ package com.example.newgonggong
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.annotation.ColorRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
+import androidx.compose.material.MaterialTheme.typography
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -22,6 +24,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -36,6 +41,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
+import kotlinx.coroutines.launch
 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterialApi::class)
@@ -47,6 +53,11 @@ fun NearByScreen(
 
     val favorites by viewModel.favorites_rdnmadr.collectAsState(setOf())
 
+    val modalBottomSheetState =
+        rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+
+    val coroutineScope = rememberCoroutineScope()
+
     Scaffold(
         modifier = Modifier.padding(bottom = 50.dp),
         topBar = {
@@ -55,35 +66,44 @@ fun NearByScreen(
             )
         }
     ) {
-        Column {
-            Box(modifier = Modifier.weight(0.5f)) {
-                GoogleMapView(viewModel, card?.data?.response?.body?.items)
-            }
-            Box(
-                modifier = Modifier
-                    .weight(0.5f)
-                    .fillMaxSize()
-                    .wrapContentSize(Alignment.Center)
-            ) {
-                when (card) {
-                    is Resource.Success -> {
-                        card?.data?.response?.body?.items?.let { cards ->
-                            CardListView(
-                                viewModel = viewModel,
-                                cards = cards,
-                                favorites = favorites
-                            ) {
-                                val location =
-                                    Location(it.latitude.toDouble(), it.longitude.toDouble())
-                                viewModel.setLocation(location)
+        ModalBottomSheetLayout(
+            sheetContent = { CardSheetContent(viewModel = viewModel) },
+            sheetState = modalBottomSheetState
+        ) {
+            Column {
+                Box(modifier = Modifier.weight(0.5f)) {
+                    GoogleMapView(viewModel, card?.data?.response?.body?.items)
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(0.5f)
+                        .fillMaxSize()
+                        .wrapContentSize(Alignment.Center)
+                ) {
+                    when (card) {
+                        is Resource.Success -> {
+                            card?.data?.response?.body?.items?.let { cards ->
+                                CardListView(
+                                    viewModel = viewModel,
+                                    cards = cards,
+                                    favorites = favorites
+                                ) {
+                                    coroutineScope.launch {
+                                        modalBottomSheetState.show()
+                                    }
+                                    val location =
+                                        Location(it.latitude.toDouble(), it.longitude.toDouble())
+                                    viewModel.setLocation(location)
+                                    viewModel.setCurrentCard(it)
+                                }
                             }
                         }
-                    }
-                    is Resource.Loading -> {
-                        CircularProgressIndicator()
-                    }
-                    is Resource.Error -> {
-                        Text("주변에 위치한 급식카드 가맹점이 없습니다.")
+                        is Resource.Loading -> {
+                            CircularProgressIndicator()
+                        }
+                        is Resource.Error -> {
+                            Text("주변에 위치한 급식카드 가맹점이 없습니다.")
+                        }
                     }
                 }
             }
@@ -245,5 +265,50 @@ fun FavoritesButton(
         } else {
             Icon(imageVector = Icons.Filled.FavoriteBorder, contentDescription = "Unfavorited")
         }
+    }
+}
+
+@Composable
+fun CardSheetContent(viewModel: MapsViewModel) {
+    val currentCard by viewModel.currentCard.collectAsState()
+
+    Column(Modifier.defaultMinSize(minHeight = 400.dp)) {
+        Text(
+            text = ("가게명 : " + currentCard?.mrhstNm),
+            style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 28.sp),
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = ("도로명 : " + currentCard?.rdnmadr),
+            style = typography.h6,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 10.dp)
+        )
+        Text(
+            text = ("전화번호 : " + currentCard?.phoneNumber),
+            style = typography.h6,
+            modifier = Modifier.padding(horizontal = 10.dp)
+        )
+        Text(
+            text = ("평일운영시각 : " + currentCard?.weekdayOperOpenHhmm + "~" + currentCard?.weekdayOperColseHhmm),
+            style = typography.h6,
+            modifier = Modifier.padding(horizontal = 10.dp)
+        )
+        Text(
+            text = ("토요일운영시각 : " + currentCard?.satOperOperOpenHhmm + "~" + currentCard?.satOperCloseHhmm),
+            style = typography.h6,
+            modifier = Modifier.padding(horizontal = 10.dp)
+        )
+        Text(
+            text = ("공휴일운영시각 : " + currentCard?.holidayOperOpenHhmm + "~" + currentCard?.holidayCloseOpenHhmm),
+            style = typography.h6,
+            modifier = Modifier.padding(horizontal = 10.dp)
+        )
     }
 }
